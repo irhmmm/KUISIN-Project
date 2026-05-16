@@ -59,10 +59,10 @@
     <main class="flex-1 flex flex-col h-screen overflow-hidden">
 
         <!-- Header Atas -->
-        <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 h-20 flex items-center justify-between px-10 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] z-10 relative">
+        <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 h-20 flex items-center justify-between px-4 md:px-10 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] z-10 relative">
             <div>
-                <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Kuis Center</h2>
-                <p class="text-sm text-gray-500">Pilih mode kuis dan mulai sesi interaktif</p>
+                <h2 class="text-lg md:text-2xl font-bold text-gray-800 tracking-tight">Kuis Center</h2>
+                <p class="text-xs md:text-sm text-gray-500 hidden md:block">Pilih mode kuis dan mulai sesi interaktif</p>
             </div>
 
             <div class="flex items-center gap-4">
@@ -83,7 +83,7 @@
         </header>
 
         <!-- Konten Scrollable -->
-        <div class="flex-1 overflow-y-auto p-10 flex flex-col gap-8">
+        <div class="flex-1 overflow-y-auto p-4 md:p-10 pb-24 md:pb-10 flex flex-col gap-8">
 
             <!-- Baris Atas: Promo & Live Activity -->
             <div class="flex flex-col xl:flex-row gap-8">
@@ -224,6 +224,26 @@
                 </button>
             </form>
         </div>
+    </div>
+
+    <!-- Mobile Bottom Nav -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around items-center h-16 z-40 pb-safe">
+        <a href="{{ route('teacher.dashboard') }}" class="flex flex-col items-center justify-center w-full h-full text-blue-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Dashboard</span>
+        </a>
+        <a href="{{ route('teacher.library') }}" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-900 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Bank Soal</span>
+        </a>
+        <a href="{{ route('teacher.results') }}" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-900 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Live Results</span>
+        </a>
+        <a href="{{ route('profile.edit') }}" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-900 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Profil</span>
+        </a>
     </div>
 
     <script>

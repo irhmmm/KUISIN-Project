@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -50,7 +51,7 @@ class TeacherController extends Controller
         DB::table('users')->insert([
             'name'     => $request->name,
             'email'    => $request->email,
-            'password' => $request->password,
+            'password' => Hash::make($request->password),
             'role'     => 'teacher'
         ]);
 
@@ -70,7 +71,7 @@ class TeacherController extends Controller
                   ->first();
 
         if ($user) {
-            DB::table('users')->where('id', $user->id)->update(['password' => '12345']);
+            DB::table('users')->where('id', $user->id)->update(['password' => Hash::make('12345')]);
             return redirect()->route('teacher.login')->with('success', 'Password direset menjadi: 12345');
         }
         return back()->with('error', 'Email tidak ditemukan.');
@@ -457,8 +458,8 @@ class TeacherController extends Controller
             DB::table('options')->insert([
                 ['question_id' => $q1, 'option_text' => 'Sangat Paham', 'is_correct' => 1],
                 ['question_id' => $q1, 'option_text' => 'Cukup Paham', 'is_correct' => 1],
-                ['question_id' => $q1, 'option_text' => 'Kurang Paham', 'is_correct' => 0],
-                ['question_id' => $q1, 'option_text' => 'Sama Sekali Tidak Paham', 'is_correct' => 0],
+                ['question_id' => $q1, 'option_text' => 'Kurang Paham', 'is_correct' => 1],
+                ['question_id' => $q1, 'option_text' => 'Sama Sekali Tidak Paham', 'is_correct' => 1],
             ]);
 
             // Soal 2
@@ -470,12 +471,15 @@ class TeacherController extends Controller
             ]);
             DB::table('options')->insert([
                 ['question_id' => $q2, 'option_text' => 'Semuanya mudah dimengerti', 'is_correct' => 1],
-                ['question_id' => $q2, 'option_text' => 'Bagian teori/konsep', 'is_correct' => 0],
-                ['question_id' => $q2, 'option_text' => 'Bagian praktik/latihan soal', 'is_correct' => 0],
-                ['question_id' => $q2, 'option_text' => 'Kecepatan penyampaian materi terlalu cepat', 'is_correct' => 0],
+                ['question_id' => $q2, 'option_text' => 'Bagian teori/konsep', 'is_correct' => 1],
+                ['question_id' => $q2, 'option_text' => 'Bagian praktik/latihan soal', 'is_correct' => 1],
+                ['question_id' => $q2, 'option_text' => 'Kecepatan penyampaian materi terlalu cepat', 'is_correct' => 1],
             ]);
         } else {
             $quizId = $exitQuiz->id;
+            // Update existing options to be always correct in case it was created previously
+            $exitQuestionIds = DB::table('questions')->where('quiz_id', $quizId)->pluck('id');
+            DB::table('options')->whereIn('question_id', $exitQuestionIds)->update(['is_correct' => 1]);
         }
 
         // Launch room with this quiz
@@ -635,9 +639,9 @@ class TeacherController extends Controller
             $csvData[] = $row;
         }
 
-        $filename = 'Hasil_Kuis_' . $roomCode . '_' . date('d-m-Y_H-i') . '.csv';
+        $filename = 'Hasil_Kuis_' . $roomCode . '_' . date('d-m-Y_H-i') . '.xls';
         $headers  = [
-            'Content-type'        => 'text/csv',
+            'Content-type'        => 'application/vnd.ms-excel',
             'Content-Disposition' => "attachment; filename=$filename",
             'Pragma'              => 'no-cache',
             'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
@@ -645,58 +649,23 @@ class TeacherController extends Controller
         ];
 
         $callback = function () use ($csvData) {
-            $file = fopen('php://output', 'w');
-            foreach ($csvData as $row) {
-                fputcsv($file, $row);
+            echo '<table border="1" cellpadding="5" cellspacing="0">';
+            foreach ($csvData as $index => $row) {
+                echo '<tr>';
+                foreach ($row as $cell) {
+                    if ($index === 0) {
+                        echo '<th style="background-color:#f2f2f2; font-weight:bold;">' . htmlspecialchars($cell) . '</th>';
+                    } else {
+                        echo '<td>' . htmlspecialchars($cell) . '</td>';
+                    }
+                }
+                echo '</tr>';
             }
-            fclose($file);
+            echo '</table>';
         };
 
         return response()->stream($callback, 200, $headers);
     }
 
-    // =============================================
-    // 7. GOOGLE OAUTH LOGIN
-    // =============================================
-
-    public function redirectToGoogle()
-    {
-        return Socialite::driver('google')->redirect();
-    }
-
-    public function handleGoogleCallback()
-    {
-        try {
-            // Bypass verifikasi SSL khusus untuk Localhost menggunakan Guzzle
-            $googleUser = Socialite::driver('google')
-                            ->setHttpClient(new \GuzzleHttp\Client(['verify' => false]))
-                            ->user();
-
-            $existingUser = DB::table('users')->where('email', $googleUser->getEmail())->first();
-
-            if ($existingUser) {
-                // Update Google ID jika belum ada
-                DB::table('users')->where('id', $existingUser->id)->update([
-                    'google_id' => $googleUser->getId()
-                ]);
-                session(['teacher_id' => $existingUser->id, 'teacher_name' => $existingUser->name]);
-            } else {
-                // Buat akun dosen baru secara otomatis
-                $newId = DB::table('users')->insertGetId([
-                    'name'      => $googleUser->getName(),
-                    'email'     => $googleUser->getEmail(),
-                    'password'  => 'LOGIN_VIA_GOOGLE',
-                    'role'      => 'teacher',
-                    'google_id' => $googleUser->getId(),
-                ]);
-                session(['teacher_id' => $newId, 'teacher_name' => $googleUser->getName()]);
-            }
-
-            return redirect()->route('teacher.dashboard');
-
-        } catch (\Throwable $e) {
-            // Jika gagal, hentikan program dan tampilkan error ke layar
-            dd('ERROR GOOGLE LOGIN: ' . $e->getMessage());
-        }
-    }
+    // (Fungsi Google Login telah dihapus dari sini karena sudah dipindahkan secara terpusat ke AuthController)
 }

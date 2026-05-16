@@ -41,7 +41,7 @@
     <!-- Konten Utama -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden">
         <!-- Header -->
-        <header class="bg-white border-b border-gray-200 h-20 flex items-center justify-between px-8 shadow-sm z-10 relative">
+        <header class="bg-white border-b border-gray-200 h-20 flex items-center justify-between px-4 md:px-8 shadow-sm z-10 relative">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800">Overview Sistem</h1>
                 <p class="text-sm text-gray-500">Statistik platform KUISIN saat ini</p>
@@ -58,7 +58,7 @@
         </header>
 
         <!-- Scrollable Area -->
-        <div class="flex-1 overflow-y-auto p-8 bg-gray-50">
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 bg-gray-50">
 
             @if(session('success'))
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 flex items-center shadow-sm">
@@ -164,6 +164,18 @@
 
         </div>
     </main>
+
+    <!-- Mobile Bottom Nav (Admin) -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around items-center h-16 z-40 pb-safe">
+        <a href="{{ route('admin.dashboard') }}" class="flex flex-col items-center justify-center w-full h-full text-indigo-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Dashboard</span>
+        </a>
+        <a href="{{ route('admin.logout') }}" onclick="return confirm('Keluar?')" class="flex flex-col items-center justify-center w-full h-full text-red-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            <span class="text-[10px] font-bold mt-1">Logout</span>
+        </a>
+    </div>
 
 </body>
 </html>

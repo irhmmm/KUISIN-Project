@@ -90,7 +90,7 @@
 <main class="flex-1 flex flex-col h-screen overflow-hidden">
 
     {{-- Header --}}
-    <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 shrink-0 shadow-sm z-10 relative">
+    <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 md:px-8 shrink-0 shadow-sm z-10 relative">
         <div class="flex items-center gap-3">
             <h1 class="text-xl font-bold text-gray-800">Bank Soal</h1>
         </div>
@@ -144,7 +144,7 @@
         </div>
 
         {{-- ── Right: Daftar Soal ── --}}
-        <div class="flex-1 overflow-y-auto thin-scroll flex flex-col">
+        <div class="flex-1 overflow-y-auto thin-scroll flex flex-col pb-24 md:pb-0">
             
             @if(!$selectedQuizId)
             <div class="flex-1 flex flex-col items-center justify-center p-10 text-center">
@@ -352,6 +352,10 @@
                     <p id="pdfName" class="text-sm text-red-600 font-bold mt-3 hidden bg-red-50 inline-block px-3 py-1 rounded-lg"></p>
                 </div>
                 <input type="file" id="filePdf" accept=".pdf" class="hidden" onchange="onFileChange(this,'pdf')">
+                <div class="mt-4 flex justify-between items-center">
+                    <p class="text-xs text-gray-500">Gunakan format: "1. Pertanyaan ... A. Jawaban ... Jawaban: A"</p>
+                    <button onclick="downloadPdfTemplate()" class="text-xs font-bold text-red-600 hover:text-red-700 underline decoration-red-200 underline-offset-2">Download Template PDF</button>
+                </div>
             </div>
 
             {{-- ── Paste Tab ── --}}
@@ -401,6 +405,26 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Mobile Bottom Nav -->
+<div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around items-center h-16 z-40 pb-safe">
+    <a href="{{ route('teacher.dashboard') }}" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-900 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        <span class="text-[10px] font-bold mt-1">Dashboard</span>
+    </a>
+    <a href="{{ route('teacher.library') }}" class="flex flex-col items-center justify-center w-full h-full text-blue-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+        <span class="text-[10px] font-bold mt-1">Bank Soal</span>
+    </a>
+    <a href="{{ route('teacher.results') }}" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-900 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        <span class="text-[10px] font-bold mt-1">Live Results</span>
+    </a>
+    <a href="{{ route('profile.edit') }}" class="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-900 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+        <span class="text-[10px] font-bold mt-1">Profil</span>
+    </a>
 </div>
 
 {{-- Toast --}}
@@ -664,6 +688,40 @@ function downloadTemplate() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'template_soal_kuisin.csv'; a.click();
     toast('success', 'Template CSV berhasil didownload!');
+}
+
+function downloadPdfTemplate() {
+    const text = `1. Apa nama ibu kota Indonesia?
+A. Jakarta
+B. Bandung
+C. Surabaya
+D. Medan
+Jawaban: A
+
+2. Berapakah hasil dari 5 x 5?
+A. 10
+B. 20
+C. 25
+D. 30
+Jawaban: C
+
+3. Siapakah penemu bola lampu?
+A. Albert Einstein
+B. Thomas Alva Edison
+C. Isaac Newton
+D. Nikola Tesla
+Jawaban: B
+
+Catatan Penting:
+- Pastikan nomor soal diikuti tanda titik (contoh: 1.)
+- Pastikan setiap pilihan ganda diawali huruf besar dan titik (contoh: A.)
+- Pastikan kunci jawaban ditulis jelas di bagian bawah setiap soal.
+- Anda bisa menyalin teks ini atau mengetiknya di Microsoft Word, lalu pilih "Save As" -> "PDF".`;
+
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'Template_Soal_Untuk_PDF.txt'; a.click();
+    toast('success', 'Template Format PDF berhasil didownload!');
 }
 
 // ─── Helpers ─────────────────────────────────────────

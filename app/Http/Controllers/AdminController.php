@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
@@ -17,13 +18,23 @@ class AdminController extends Controller
     {
         $user = DB::table('users')
                   ->where('email', $request->email)
-                  ->where('password', $request->password)
                   ->where('role', 'admin')
                   ->first();
 
         if ($user) {
-            session(['admin_id' => $user->id, 'admin_name' => $user->name]);
-            return redirect()->route('admin.dashboard');
+            // Cek hash password atau fallback ke plaintext untuk migrasi halus
+            if (Hash::check($request->password, $user->password) || $request->password === $user->password) {
+                
+                // Jika masih plaintext (karena cocok persis), update ke versi hash agar aman
+                if ($request->password === $user->password) {
+                    DB::table('users')->where('id', $user->id)->update([
+                        'password' => Hash::make($request->password)
+                    ]);
+                }
+
+                session(['admin_id' => $user->id, 'admin_name' => $user->name]);
+                return redirect()->route('admin.dashboard');
+            }
         }
         return back()->with('error', 'Email atau password salah, atau Anda bukan Admin!');
     }
@@ -86,7 +97,7 @@ class AdminController extends Controller
                 // Assuming students table structure requires nim, name, password
                 DB::table('students')->updateOrInsert(
                     ['nim' => trim($data[0])],
-                    ['name' => trim($data[1]), 'password' => trim($data[2]), 'teacher_id' => 0] // 0 means default or global
+                    ['name' => trim($data[1]), 'password' => Hash::make(trim($data[2])), 'teacher_id' => 0] // 0 means default or global
                 );
                 $imported++;
             }
@@ -100,7 +111,7 @@ class AdminController extends Controller
     {
         if (!session('admin_id')) return redirect()->route('login');
 
-        DB::table('students')->where('id', $id)->update(['password' => '12345']);
+        DB::table('students')->where('id', $id)->update(['password' => Hash::make('12345')]);
         return redirect()->back()->with('success', 'Berhasil! Password peserta telah direset menjadi: 12345');
     }
 }

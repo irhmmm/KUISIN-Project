@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -30,16 +31,26 @@ class AuthController extends Controller
 
         $user = DB::table('users')
                   ->where('email', $request->email)
-                  ->where('password', $request->password)
                   ->first();
 
         if ($user) {
-            if ($user->role === 'admin') {
-                session(['admin_id' => $user->id, 'admin_name' => $user->name, 'role' => 'admin']);
-                return redirect()->route('admin.dashboard');
-            } elseif ($user->role === 'teacher') {
-                session(['teacher_id' => $user->id, 'teacher_name' => $user->name, 'role' => 'teacher']);
-                return redirect()->route('teacher.dashboard');
+            // Cek hash password atau fallback ke plaintext untuk migrasi halus
+            if (Hash::check($request->password, $user->password) || $request->password === $user->password) {
+                
+                // Jika masih plaintext (karena cocok persis), update ke versi hash agar aman
+                if ($request->password === $user->password) {
+                    DB::table('users')->where('id', $user->id)->update([
+                        'password' => Hash::make($request->password)
+                    ]);
+                }
+
+                if ($user->role === 'admin') {
+                    session(['admin_id' => $user->id, 'admin_name' => $user->name, 'role' => 'admin']);
+                    return redirect()->route('admin.dashboard');
+                } elseif ($user->role === 'teacher') {
+                    session(['teacher_id' => $user->id, 'teacher_name' => $user->name, 'role' => 'teacher']);
+                    return redirect()->route('teacher.dashboard');
+                }
             }
         }
         
@@ -78,7 +89,7 @@ class AuthController extends Controller
         $data = ['name' => $request->name];
         
         if ($request->filled('password')) {
-            $data['password'] = $request->password;
+            $data['password'] = Hash::make($request->password);
         }
 
         DB::table('users')->where('id', $userId)->update($data);
@@ -105,10 +116,7 @@ class AuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
-            // Bypass verifikasi SSL khusus untuk Localhost menggunakan Guzzle
-            $googleUser = Socialite::driver('google')
-                            ->setHttpClient(new \GuzzleHttp\Client(['verify' => false]))
-                            ->user();
+            $googleUser = Socialite::driver('google')->user();
 
             $existingUser = DB::table('users')->where('email', $googleUser->getEmail())->first();
 
@@ -139,7 +147,7 @@ class AuthController extends Controller
             }
 
         } catch (\Throwable $e) {
-            dd('ERROR GOOGLE LOGIN: ' . $e->getMessage());
+            return redirect()->route('login')->with('error', 'Gagal login dengan Google.');
         }
     }
 }

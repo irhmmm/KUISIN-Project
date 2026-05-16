@@ -7,7 +7,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 // =============================================
@@ -54,26 +54,29 @@ Route::post('/teacher-register', [TeacherController::class, 'processRegister'])-
 Route::get('/teacher-forgot-password',  [TeacherController::class, 'showForgot'])->name('teacher.forgot');
 Route::post('/teacher-forgot-password', [TeacherController::class, 'processForgot'])->name('teacher.forgot.submit');
 
-// Dashboard & Control
-Route::get('/teacher-dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
-Route::post('/launch-quiz',      [TeacherController::class, 'launchQuiz'])->name('teacher.launch');
-Route::post('/start-exam',       [TeacherController::class, 'startExam'])->name('teacher.startExam');
-Route::post('/end-exam',         [TeacherController::class, 'endExam'])->name('teacher.endExam');
-Route::get('/live-results',      [TeacherController::class, 'showLiveResults'])->name('teacher.results');
-Route::get('/space-race',        [TeacherController::class, 'spaceRaceLive'])->name('teacher.spacerace');
-Route::get('/api/space-race',    [TeacherController::class, 'getSpaceRaceData'])->name('teacher.spacerace.data');
-Route::get('/export-results',    [TeacherController::class, 'exportResults'])->name('teacher.export');
+// Dashboard & Control (Protected)
+Route::middleware(['role:teacher'])->group(function () {
+    Route::get('/teacher-dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
+    Route::post('/launch-quiz',      [TeacherController::class, 'launchQuiz'])->name('teacher.launch');
+    Route::post('/start-exam',       [TeacherController::class, 'startExam'])->name('teacher.startExam');
+    Route::post('/end-exam',         [TeacherController::class, 'endExam'])->name('teacher.endExam');
+    Route::get('/live-results',      [TeacherController::class, 'showLiveResults'])->name('teacher.results');
+    Route::get('/space-race',        [TeacherController::class, 'spaceRaceLive'])->name('teacher.spacerace');
+    Route::get('/api/space-race',    [TeacherController::class, 'getSpaceRaceData'])->name('teacher.spacerace.data');
+    Route::get('/export-results',    [TeacherController::class, 'exportResults'])->name('teacher.export');
 
-// Library & Questions
-Route::get('/teacher-library',         [TeacherController::class, 'library'])->name('teacher.library');
-Route::post('/teacher-library/quiz',   [TeacherController::class, 'storeQuiz'])->name('teacher.storeQuiz');
-Route::post('/teacher-library/store',  [TeacherController::class, 'storeQuestion'])->name('teacher.storeQuestion');
-Route::get('/teacher-library/edit/{id}',     [TeacherController::class, 'editQuestion'])->name('teacher.editQuestion');
-Route::post('/teacher-library/update/{id}',  [TeacherController::class, 'updateQuestion'])->name('teacher.updateQuestion');
-Route::delete('/teacher-library/delete/{id}',[TeacherController::class, 'deleteQuestion'])->name('teacher.deleteQuestion');
+    // Library & Questions
+    Route::get('/teacher-library',         [TeacherController::class, 'library'])->name('teacher.library');
+    Route::post('/teacher-library/quiz',   [TeacherController::class, 'storeQuiz'])->name('teacher.storeQuiz');
+    Route::post('/teacher-library/store',  [TeacherController::class, 'storeQuestion'])->name('teacher.storeQuestion');
+    Route::get('/teacher-library/edit/{id}',     [TeacherController::class, 'editQuestion'])->name('teacher.editQuestion');
+    Route::post('/teacher-library/update/{id}',  [TeacherController::class, 'updateQuestion'])->name('teacher.updateQuestion');
+    Route::delete('/teacher-library/delete/{id}',[TeacherController::class, 'deleteQuestion'])->name('teacher.deleteQuestion');
 
-// Exit Ticket
-Route::post('/launch-exit-ticket', [TeacherController::class, 'launchExitTicket'])->name('teacher.launchExitTicket');
+    // Exit Ticket
+    Route::post('/launch-exit-ticket', [TeacherController::class, 'launchExitTicket'])->name('teacher.launchExitTicket');
+});
+
 
 // =============================================
 // ADMIN ROUTES
@@ -83,11 +86,13 @@ Route::get('/admin-login', function() { return redirect()->route('login'); })->n
 Route::post('/admin-login', function() { return redirect()->route('login'); })->name('admin.login.submit');
 Route::get('/admin-logout', [AuthController::class, 'logout'])->name('admin.logout');
 
-Route::get('/admin-dashboard',   [AdminController::class, 'dashboard'])->name('admin.dashboard');
-Route::delete('/admin-teacher/{id}', [AdminController::class, 'deleteTeacher'])->name('admin.deleteTeacher');
+Route::middleware(['role:admin'])->group(function () {
+    Route::get('/admin-dashboard',   [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::delete('/admin-teacher/{id}', [AdminController::class, 'deleteTeacher'])->name('admin.deleteTeacher');
 
-// Manajemen Peserta (Mahasiswa) dipindah ke Admin
-Route::get('/admin/students', [AdminController::class, 'manageStudents'])->name('admin.students');
-Route::post('/admin/students/import', [AdminController::class, 'importStudents'])->name('admin.students.import');
-Route::post('/admin/students/{id}/reset', [AdminController::class, 'resetStudentPassword'])->name('admin.students.reset');
+    // Manajemen Peserta (Mahasiswa) dipindah ke Admin
+    Route::get('/admin/students', [AdminController::class, 'manageStudents'])->name('admin.students');
+    Route::post('/admin/students/import', [AdminController::class, 'importStudents'])->name('admin.students.import');
+    Route::post('/admin/students/{id}/reset', [AdminController::class, 'resetStudentPassword'])->name('admin.students.reset');
+});
 
