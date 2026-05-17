@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style> body { font-family: 'Outfit', sans-serif; } </style>
 </head>
-<body class="bg-gradient-to-br from-[#f8fafc] to-[#e2e8f0] min-h-screen flex overflow-hidden">
+<body class="bg-gradient-to-br from-[#f8fafc] to-[#e2e8f0] min-h-screen flex md:overflow-hidden">
 
     <!-- Sidebar Kiri -->
     <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex">
@@ -56,50 +56,50 @@
     </aside>
 
     <!-- Area Konten Utama -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+    <main class="flex-1 flex flex-col h-auto md:h-screen overflow-visible md:overflow-hidden">
 
         <!-- Header Atas -->
-        <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 h-20 flex items-center justify-between px-4 md:px-10 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] z-10 relative">
+        <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 min-h-[64px] md:h-20 flex items-center justify-between px-4 md:px-10 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] z-10 relative py-3 md:py-0">
             <div>
                 <h2 class="text-lg md:text-2xl font-bold text-gray-800 tracking-tight">Kuis Center</h2>
                 <p class="text-xs md:text-sm text-gray-500 hidden md:block">Pilih mode kuis dan mulai sesi interaktif</p>
             </div>
 
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 flex-shrink-0">
                 @if($room && $room->is_active)
-                    <a href="{{ (isset($room->mode) && $room->mode === 'space_race') ? route('teacher.spacerace') : route('teacher.results') }}" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-2.5 rounded-xl flex items-center text-sm font-semibold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5">
-                        <span class="mr-3 text-blue-100 text-xs tracking-widest uppercase">{{ (isset($room->status) && $room->status == 'waiting') ? 'LOBBY' : 'LIVE' }} ROOM</span>
-                        <span class="text-lg tracking-widest">{{ $room->room_name }}</span>
-                        <div class="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse ml-3 shadow-[0_0_8px_rgba(74,222,128,0.8)]"></div>
+                    <a href="{{ (isset($room->mode) && $room->mode === 'space_race') ? route('teacher.spacerace') : route('teacher.results') }}" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl flex items-center text-xs md:text-sm font-semibold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5">
+                        <span class="mr-2 md:mr-3 text-blue-100 text-[10px] md:text-xs tracking-widest uppercase">{{ (isset($room->status) && $room->status == 'waiting') ? 'LOBBY' : 'LIVE' }}</span>
+                        <span class="text-sm md:text-lg tracking-widest">{{ $room->room_name }}</span>
+                        <div class="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-400 animate-pulse ml-2 md:ml-3 shadow-[0_0_8px_rgba(74,222,128,0.8)]"></div>
                     </a>
                 @else
-                    <div class="bg-gray-100 text-gray-500 px-5 py-2.5 rounded-xl flex items-center text-sm font-semibold border border-gray-200">
-                        <span class="mr-3 text-xs tracking-widest uppercase">STATUS</span>
-                        <span class="text-base tracking-widest">OFFLINE</span>
-                        <div class="w-2.5 h-2.5 rounded-full bg-red-400 ml-3"></div>
+                    <div class="bg-gray-100 text-gray-500 px-3 md:px-5 py-2 md:py-2.5 rounded-xl flex items-center text-xs md:text-sm font-semibold border border-gray-200">
+                        <span class="mr-2 md:mr-3 text-[10px] md:text-xs tracking-widest uppercase">STATUS</span>
+                        <span class="text-sm md:text-base tracking-widest">OFFLINE</span>
+                        <div class="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-red-400 ml-2 md:ml-3"></div>
                     </div>
                 @endif
             </div>
         </header>
 
         <!-- Konten Scrollable -->
-        <div class="flex-1 overflow-y-auto p-4 md:p-10 pb-24 md:pb-10 flex flex-col gap-8">
+        <div class="flex-1 overflow-visible md:overflow-y-auto p-4 md:p-10 pb-28 md:pb-10 flex flex-col gap-6 md:gap-8">
 
             <!-- Baris Atas: Promo & Live Activity -->
             <div class="flex flex-col xl:flex-row gap-8">
 
                 <!-- Banner Promo Mode -->
-                <div class="flex-1 bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 rounded-3xl p-8 text-white shadow-xl shadow-purple-900/20 relative overflow-hidden">
+                <div class="flex-1 min-w-0 bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 rounded-2xl md:rounded-3xl p-5 md:p-8 text-white shadow-xl shadow-purple-900/20 relative overflow-hidden">
                     <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
                     <div class="absolute -right-20 -top-20 w-64 h-64 bg-purple-500 rounded-full blur-[100px] opacity-50"></div>
-                    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 h-full">
-                        <div class="flex-1">
-                            <span class="bg-purple-500/30 text-purple-200 text-xs font-bold px-3 py-1 rounded-full border border-purple-400/30 mb-3 inline-block">MODE BARU</span>
-                            <h3 class="text-3xl font-bold mb-2">Space Race! 🚀</h3>
-                            <p class="text-indigo-100 text-sm leading-relaxed max-w-lg">Tingkatkan semangat kompetisi di kelas. Bagi mahasiswa ke dalam tim dan balapan menuju garis finish dengan menjawab pertanyaan dengan benar.</p>
+                    <div class="relative z-10 flex flex-col items-start gap-4 md:gap-6">
+                        <div class="w-full">
+                            <span class="bg-purple-500/30 text-purple-200 text-[10px] md:text-xs font-bold px-3 py-1 rounded-full border border-purple-400/30 mb-3 inline-block">MODE BARU</span>
+                            <h3 class="text-2xl md:text-3xl font-bold mb-2">Space Race! 🚀</h3>
+                            <p class="text-indigo-100 text-xs md:text-sm leading-relaxed">Tingkatkan semangat kompetisi di kelas. Bagi mahasiswa ke dalam tim dan balapan menuju garis finish dengan menjawab pertanyaan dengan benar.</p>
                         </div>
-                        <div class="flex-shrink-0 self-center md:self-end md:pb-2">
-                            <button onclick="openLaunchModal('space_race')" class="bg-white text-indigo-900 hover:bg-indigo-50 px-6 py-3 rounded-xl font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all hover:scale-105 whitespace-nowrap">
+                        <div class="flex-shrink-0 w-full md:w-auto">
+                            <button onclick="openLaunchModal('space_race')" class="w-full md:w-auto bg-white text-indigo-900 hover:bg-indigo-50 px-5 md:px-6 py-2.5 md:py-3 rounded-xl font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all hover:scale-105 text-sm md:text-base">
                                 Luncurkan Space Race
                             </button>
                         </div>
@@ -107,7 +107,7 @@
                 </div>
 
                 <!-- Live Activity Feed -->
-                <div class="w-full xl:w-80 bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col h-full max-h-[280px]">
+                <div class="w-full xl:w-80 bg-white border border-gray-200 rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-sm flex flex-col max-h-[240px] md:max-h-[280px]">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="font-bold text-gray-800">Live Activity Feed</h3>
                         <div class="bg-green-100 text-green-700 px-3 py-1 rounded-full flex items-center text-xs font-bold shadow-sm transition-all hover:bg-green-200 cursor-default" title="{{ $totalStudents }} Mahasiswa Aktif">
@@ -142,25 +142,25 @@
             </div>
 
             <!-- Grid Menu Mode Lainnya -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
 
                 <!-- Kuis Standard -->
-                <div onclick="openLaunchModal('standard')" class="group cursor-pointer bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 relative overflow-hidden">
-                    <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:-translate-y-2 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-inner">
+                <div onclick="openLaunchModal('standard')" class="group cursor-pointer bg-white p-5 md:p-8 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 relative overflow-hidden">
+                    <div class="w-12 h-12 md:w-16 md:h-16 bg-blue-50 text-blue-600 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:-translate-y-2 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-inner">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                     </div>
-                    <h3 class="font-bold text-gray-800 text-xl mb-2">Kuis Standard</h3>
-                    <p class="text-sm text-gray-500">Evaluasi individual dengan tampilan timer dan leaderboard.</p>
+                    <h3 class="font-bold text-gray-800 text-lg md:text-xl mb-1 md:mb-2">Kuis Standard</h3>
+                    <p class="text-xs md:text-sm text-gray-500">Evaluasi individual dengan tampilan timer dan leaderboard.</p>
                     <div class="absolute bottom-0 left-0 w-full h-1 bg-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                 </div>
 
                 <!-- Exit Ticket -->
-                <div onclick="document.getElementById('form-exit-ticket').submit();" class="group cursor-pointer bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-green-200 transition-all duration-300 relative overflow-hidden">
-                    <div class="w-16 h-16 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center mb-6 group-hover:-translate-y-2 group-hover:bg-green-500 group-hover:text-white transition-all duration-300 shadow-inner">
+                <div onclick="document.getElementById('form-exit-ticket').submit();" class="group cursor-pointer bg-white p-5 md:p-8 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-green-200 transition-all duration-300 relative overflow-hidden">
+                    <div class="w-12 h-12 md:w-16 md:h-16 bg-green-50 text-green-500 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:-translate-y-2 group-hover:bg-green-500 group-hover:text-white transition-all duration-300 shadow-inner">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                     </div>
-                    <h3 class="font-bold text-gray-800 text-xl mb-2">Exit Ticket</h3>
-                    <p class="text-sm text-gray-500">Cek pemahaman kelas secara cepat dengan 2 pertanyaan singkat di akhir jam.</p>
+                    <h3 class="font-bold text-gray-800 text-lg md:text-xl mb-1 md:mb-2">Exit Ticket</h3>
+                    <p class="text-xs md:text-sm text-gray-500">Cek pemahaman kelas secara cepat dengan 2 pertanyaan singkat di akhir jam.</p>
                     <div class="absolute bottom-0 left-0 w-full h-1 bg-green-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                 </div>
                 <form id="form-exit-ticket" action="{{ route('teacher.launchExitTicket') }}" method="POST" class="hidden">@csrf</form>
@@ -171,7 +171,7 @@
 
     <!-- Modal Form Kuis -->
     <div id="launchModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
-        <div class="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl scale-95 opacity-0 transition-all duration-300" id="launchModalContent">
+        <div class="bg-white p-5 md:p-8 rounded-2xl md:rounded-3xl w-[calc(100%-2rem)] md:w-full max-w-md shadow-2xl scale-95 opacity-0 transition-all duration-300 mx-auto" id="launchModalContent">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="font-bold text-xl text-gray-800" id="modalTitle">Luncurkan Kuis</h3>
                 <button onclick="closeLaunchModal()" class="text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-full transition-colors">

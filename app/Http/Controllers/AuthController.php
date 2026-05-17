@@ -34,15 +34,23 @@ class AuthController extends Controller
                   ->first();
 
         if ($user) {
-            // Cek hash password atau fallback ke plaintext untuk migrasi halus
-            if (Hash::check($request->password, $user->password) || $request->password === $user->password) {
-                
-                // Jika masih plaintext (karena cocok persis), update ke versi hash agar aman
+            $isValid = false;
+            
+            try {
+                if (Hash::check($request->password, $user->password)) {
+                    $isValid = true;
+                }
+            } catch (\Exception $e) {
+                // Fallback jika password di database belum di-hash (plaintext)
                 if ($request->password === $user->password) {
+                    $isValid = true;
                     DB::table('users')->where('id', $user->id)->update([
                         'password' => Hash::make($request->password)
                     ]);
                 }
+            }
+
+            if ($isValid) {
 
                 if ($user->role === 'admin') {
                     session(['admin_id' => $user->id, 'admin_name' => $user->name, 'role' => 'admin']);
