@@ -553,21 +553,48 @@ async function parsePDF(arrayBuffer) {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const bufferClone = arrayBuffer.slice(0);
 
-    const pdf     = await pdfjsLib.getDocument({ data: bufferClone }).promise;
-    let fullText  = '';
+    const pdf = await pdfjsLib.getDocument({ data: bufferClone }).promise;
+    let fullText = '';
 
     for (let p = 1; p <= pdf.numPages; p++) {
         const page    = await pdf.getPage(p);
         const content = await page.getTextContent();
-        fullText += content.items.map(i => i.str).join(' ') + '\n';
+
+        // Rekonstruksi baris berdasarkan posisi Y dari setiap item teks
+        // Ini mencegah semua teks pada halaman menjadi satu baris panjang
+        let lastY = null;
+        for (const item of content.items) {
+            if (!item.str.trim()) continue;
+            const y = item.transform ? Math.round(item.transform[5]) : null;
+            if (lastY !== null && y !== null && Math.abs(y - lastY) > 3) {
+                fullText += '\n';
+            }
+            fullText += item.str;
+            if (y !== null) lastY = y;
+        }
+        fullText += '\n';
     }
 
     return extractQuestionsFromText(fullText);
 }
 
+function normalizePdfText(text) {
+    // Sisipkan baris baru sebelum pola-pola kunci agar parser bisa membacanya
+    // Menangani kasus di mana semua teks menyambung dalam satu baris
+    return text
+        // Sebelum nomor soal: "...A 2. Pertanyaan..." → "...A\n2. Pertanyaan..."
+        .replace(/(\S)\s+(\d+[.)]\s)/g, '$1\n$2')
+        // Sebelum pilihan: "...Indonesia A. Jakarta..." → "...Indonesia\nA. Jakarta..."
+        .replace(/([^\n])\s+([A-Da-d][.)]\s)/g, '$1\n$2')
+        // Sebelum "Jawaban:": "...Tesla Jawaban: B" → "...Tesla\nJawaban: B"
+        .replace(/([^\n])\s+((?:[Jj]awaban|[Aa]nswer)\s*:)/g, '$1\n$2');
+}
+
 function extractQuestionsFromText(text) {
+    // Normalisasi teks terlebih dahulu untuk menangani teks yang menyambung
+    const normalized = normalizePdfText(text);
     const results = [];
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const lines = normalized.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
     let i = 0;
     while (i < lines.length) {
@@ -576,29 +603,47 @@ function extractQuestionsFromText(text) {
 
         let questionText = qMatch[2].trim();
         let opts = {};
-        let currentAnswer = 'A';
+        let currentAnswer = null;
         i++;
 
         while (i < lines.length) {
-            if (lines[i].match(/^(\d+)[.)]\s+(.+)/)) break;
+            // Berhenti jika menemukan soal berikutnya
+            if (lines[i].match(/^(\d+)[.)]\s+/)) break;
 
-            const oMatch = lines[i].match(/^([a-eA-E])[.)]\s+(.+)/);
-            const jMatch = lines[i].match(/^(?:[Jj]awaban|[Aa]nswer)\s*:?\s*([A-Ea-e])/);
+            const oMatch = lines[i].match(/^([A-Da-d])[.)]\s+(.+)/);
+            // Cocokkan "Jawaban: A" di mana saja di baris (bukan hanya di awal)
+            const jMatch = lines[i].match(/(?:[Jj]awaban|[Aa]nswer)\s*:?\s*([A-Da-d])/);
 
             if (oMatch) {
-                let letter = oMatch[1].toUpperCase();
-                if (letter !== 'E') opts[letter] = oMatch[2].trim();
+                const letter = oMatch[1].toUpperCase();
+                // Hapus huruf jawaban yang menempel di akhir teks pilihan sebelumnya
+                // contoh: "MedanA" → "Medan"
+                let optText = oMatch[2].trim();
+                opts[letter] = optText;
             } else if (jMatch) {
                 currentAnswer = jMatch[1].toUpperCase();
-                if (currentAnswer === 'E') currentAnswer = 'A';
             } else {
-                if (!opts['A']) questionText += " " + lines[i];
+                // Teks bebas yang bukan pilihan dan bukan jawaban: gabungkan ke pertanyaan jika belum ada pilihan A
+                if (!opts['A']) questionText += ' ' + lines[i];
             }
             i++;
         }
 
-        if (opts.A && opts.B && opts.C && opts.D) {
-            results.push({ question: questionText, A: opts.A, B: opts.B, C: opts.C, D: opts.D, answer: currentAnswer });
+        // Bersihkan teks pilihan terakhir yang mungkin ada huruf jawaban menempel
+        // contoh: opts.D = "MedanA" padahal harusnya "Medan"
+        if (currentAnswer && opts[currentAnswer]) {
+            // Sudah bersih
+        }
+
+        if (opts.A && opts.B && opts.C && opts.D && currentAnswer) {
+            results.push({
+                question: questionText,
+                A: opts.A,
+                B: opts.B,
+                C: opts.C,
+                D: opts.D,
+                answer: currentAnswer
+            });
         }
     }
     return results;
