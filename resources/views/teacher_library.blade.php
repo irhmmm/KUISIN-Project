@@ -132,20 +132,18 @@
                             </div>
                         </div>
                     </a>
-                    {{-- Tombol Hapus Kategori (muncul saat hover) --}}
-                    <form action="{{ route('teacher.deleteQuiz', $quiz->id) }}" method="POST"
-                          class="absolute top-1/2 right-3 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity"
-                          onsubmit="return confirm('Hapus kategori \"{{ addslashes($quiz->title) }}\"?\n\nSemua soal di dalamnya juga akan ikut terhapus!')">
+                    <form id="form-delete-quiz-{{ $quiz->id }}" action="{{ route('teacher.deleteQuiz', $quiz->id) }}" method="POST" class="hidden">
                         @csrf
                         @method('DELETE')
-                        <button type="submit"
-                                title="Hapus kategori ini"
-                                class="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 hover:border-red-300 shadow-sm transition-all active:scale-90">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                        </button>
                     </form>
+                    <button type="button"
+                            onclick="openDeleteQuizModal('{{ $quiz->id }}', '{{ addslashes($quiz->title) }}')"
+                            title="Hapus kategori ini"
+                            class="absolute top-1/2 right-3 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 hover:border-red-300 shadow-sm transition-all active:scale-90 z-10">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
                 </div>
                 @empty
                 <div class="text-center py-10 px-4">
@@ -446,6 +444,23 @@
     </a>
 </div>
 
+{{-- Modal Konfirmasi Hapus Kategori --}}
+<div id="modalDeleteQuiz" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm hidden items-center justify-center z-[70] opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-300 shadow-2xl mx-4">
+        <div class="w-14 h-14 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Hapus Kategori?</h3>
+        <p class="text-sm text-gray-500 text-center mb-6 leading-relaxed" id="deleteQuizModalText">
+            Apakah Anda yakin ingin menghapus kategori ini? <b>Semua soal di dalamnya juga akan terhapus.</b> Tindakan ini tidak dapat dibatalkan.
+        </p>
+        <div class="flex gap-3">
+            <button onclick="closeDeleteQuizModal()" type="button" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition">Batal</button>
+            <button onclick="confirmDeleteQuiz()" type="button" class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition shadow-lg shadow-red-600/20">Ya, Hapus</button>
+        </div>
+    </div>
+</div>
+
 {{-- Toast --}}
 <div id="toast" class="fixed bottom-6 right-6 hidden items-center gap-3 bg-gray-900 text-white text-sm font-semibold px-5 py-4 rounded-2xl shadow-2xl z-[60] max-w-sm">
     <div id="toastIcon"></div>
@@ -463,6 +478,39 @@ let parsedQ    = [];
 const currentQuizId = '{{ $selectedQuizId }}';
 
 // ─── Modal ───────────────────────────────────────────
+let quizIdToDelete = null;
+
+function openDeleteQuizModal(id, title) {
+    quizIdToDelete = id;
+    const m = document.getElementById('modalDeleteQuiz');
+    document.getElementById('deleteQuizModalText').innerHTML = `Apakah Anda yakin ingin menghapus kategori <b>"${title}"</b>?<br><br><b>Semua soal di dalamnya juga akan terhapus.</b><br>Tindakan ini tidak dapat dibatalkan.`;
+    m.classList.remove('hidden');
+    m.classList.add('flex');
+    // Animasi muncul
+    setTimeout(() => { 
+        m.classList.remove('opacity-0'); 
+        m.querySelector('div').classList.remove('scale-95'); 
+    }, 10);
+}
+
+function closeDeleteQuizModal() {
+    quizIdToDelete = null;
+    const m = document.getElementById('modalDeleteQuiz');
+    // Animasi hilang
+    m.classList.add('opacity-0'); 
+    m.querySelector('div').classList.add('scale-95');
+    setTimeout(() => { 
+        m.classList.add('hidden'); 
+        m.classList.remove('flex'); 
+    }, 300);
+}
+
+function confirmDeleteQuiz() {
+    if (quizIdToDelete) {
+        document.getElementById('form-delete-quiz-' + quizIdToDelete).submit();
+    }
+}
+
 function openQuizModal() { const m=document.getElementById('modalQuiz'); m.classList.remove('hidden'); m.classList.add('flex'); }
 function closeQuizModal() { const m=document.getElementById('modalQuiz'); m.classList.add('hidden'); m.classList.remove('flex'); }
 
