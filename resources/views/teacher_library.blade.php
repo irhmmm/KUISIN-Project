@@ -303,10 +303,10 @@
 
 {{-- ══════════════════ IMPORT MODAL ══════════════════ --}}
 <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-    <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden fade-up">
+    <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden fade-up flex flex-col max-h-[90vh]">
 
         {{-- Modal Header --}}
-        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/></svg>
@@ -319,14 +319,14 @@
         </div>
 
         {{-- Tabs --}}
-        <div class="flex gap-2 px-6 pt-5">
+        <div class="flex gap-2 px-6 pt-5 shrink-0">
             <button class="tab-btn active text-sm font-bold px-4 py-2 rounded-xl" onclick="switchTab('csv',this)">📊 Excel / CSV</button>
             <button class="tab-btn text-sm font-bold px-4 py-2 rounded-xl" onclick="switchTab('json',this)">JSON</button>
             <button class="tab-btn text-sm font-bold px-4 py-2 rounded-xl" onclick="switchTab('pdf',this)">PDF</button>
             <button class="tab-btn text-sm font-bold px-4 py-2 rounded-xl" onclick="switchTab('paste',this)">Paste Teks</button>
         </div>
 
-        <div class="p-6 space-y-5">
+        <div class="p-6 space-y-5 overflow-y-auto thin-scroll flex-1">
 
             {{-- ── CSV Tab ── --}}
             <div id="panel-csv">
@@ -409,17 +409,17 @@
                 </p>
                 <p id="errorMsg" class="text-red-600"></p>
             </div>
+        </div>
 
-            {{-- Actions --}}
-            <div class="flex gap-3 pt-2">
-                <button onclick="doPreview()" class="px-5 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold rounded-xl transition flex items-center gap-2">
-                    Preview
-                </button>
-                <button id="btnImport" onclick="doImport()" disabled
-                    class="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition shadow-lg shadow-gray-900/20 active:scale-[0.98]">
-                    <span id="btnImportLabel">Import ke Kategori Ini</span>
-                </button>
-            </div>
+        {{-- Actions --}}
+        <div class="flex gap-3 p-6 border-t border-gray-100 shrink-0 bg-gray-50/50">
+            <button onclick="doPreview()" class="px-5 py-3 bg-white hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-xl border border-gray-200 transition flex items-center gap-2 shadow-sm">
+                Preview
+            </button>
+            <button id="btnImport" onclick="doImport()" disabled
+                class="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition shadow-lg shadow-gray-900/20 active:scale-[0.98]">
+                <span id="btnImportLabel">Import ke Kategori Ini</span>
+            </button>
         </div>
     </div>
 </div>
