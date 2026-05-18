@@ -306,7 +306,7 @@
 
         {{-- Tabs --}}
         <div class="flex gap-2 px-6 pt-5">
-            <button class="tab-btn active text-sm font-bold px-4 py-2 rounded-xl" onclick="switchTab('csv',this)">CSV / Excel</button>
+            <button class="tab-btn active text-sm font-bold px-4 py-2 rounded-xl" onclick="switchTab('csv',this)">📊 Excel / CSV</button>
             <button class="tab-btn text-sm font-bold px-4 py-2 rounded-xl" onclick="switchTab('json',this)">JSON</button>
             <button class="tab-btn text-sm font-bold px-4 py-2 rounded-xl" onclick="switchTab('pdf',this)">PDF</button>
             <button class="tab-btn text-sm font-bold px-4 py-2 rounded-xl" onclick="switchTab('paste',this)">Paste Teks</button>
@@ -320,16 +320,19 @@
                      onclick="document.getElementById('fileCsv').click()"
                      ondragover="doDragOver(event,'dropCsv')" ondragleave="doDragLeave('dropCsv')" ondrop="doDrop(event,'csv')">
                     <div class="w-12 h-12 bg-white shadow-sm border border-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                        <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                     </div>
-                    <p class="text-base font-bold text-gray-700">Drag & drop file .csv di sini</p>
-                    <p class="text-sm text-gray-400 mt-1">atau klik untuk pilih file dari komputer</p>
-                    <p id="csvName" class="text-sm text-blue-600 font-bold mt-3 hidden bg-blue-50 inline-block px-3 py-1 rounded-lg"></p>
+                    <p class="text-base font-bold text-gray-700">Drag &amp; drop file Excel atau CSV di sini</p>
+                    <p class="text-sm text-gray-400 mt-1">Mendukung <span class="font-semibold text-emerald-600">.xlsx</span>, <span class="font-semibold text-blue-600">.xls</span>, dan <span class="font-semibold text-gray-600">.csv</span></p>
+                    <p id="csvName" class="text-sm text-emerald-700 font-bold mt-3 hidden bg-emerald-50 inline-block px-3 py-1 rounded-lg"></p>
                 </div>
-                <input type="file" id="fileCsv" accept=".csv,.txt" class="hidden" onchange="onFileChange(this,'csv')">
+                <input type="file" id="fileCsv" accept=".csv,.txt,.xlsx,.xls" class="hidden" onchange="onFileChange(this,'csv')">
                 <div class="mt-4 flex justify-between items-center">
-                    <p class="text-xs text-gray-500">Kolom: question, A, B, C, D, answer</p>
-                    <button onclick="downloadTemplate()" class="text-xs font-bold text-blue-600 hover:text-blue-700 underline decoration-blue-200 underline-offset-2">Download Template</button>
+                    <p class="text-xs text-gray-500">Kolom: <code class="bg-gray-100 px-1 rounded">question, A, B, C, D, answer</code></p>
+                    <div class="flex gap-3">
+                        <button onclick="downloadTemplateExcel()" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 underline decoration-emerald-200 underline-offset-2">↓ Template Excel</button>
+                        <button onclick="downloadTemplate()" class="text-xs font-bold text-blue-600 hover:text-blue-700 underline decoration-blue-200 underline-offset-2">↓ Template CSV</button>
+                    </div>
                 </div>
             </div>
 
@@ -434,6 +437,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 // ─── State ───────────────────────────────────────────
 let activeTab  = 'csv';
@@ -479,8 +483,26 @@ function readFile(file, type) {
         reader.onload = e => { pdfRaw = e.target.result; showFileName('pdfName', file.name, file.size); };
         reader.readAsArrayBuffer(file);
     } else {
-        reader.onload = e => { csvRaw = e.target.result; showFileName('csvName', file.name, file.size); };
-        reader.readAsText(file, 'UTF-8');
+        // Cek apakah ini file Excel (.xlsx atau .xls)
+        const isExcel = /\.(xlsx|xls)$/i.test(file.name);
+        if (isExcel) {
+            reader.onload = e => {
+                try {
+                    const data    = new Uint8Array(e.target.result);
+                    const wb      = XLSX.read(data, { type: 'array' });
+                    const ws      = wb.Sheets[wb.SheetNames[0]];
+                    // Konversi sheet pertama ke CSV dengan koma sebagai delimiter
+                    csvRaw = XLSX.utils.sheet_to_csv(ws);
+                    showFileName('csvName', file.name, file.size);
+                } catch(err) {
+                    showError('Gagal membaca file Excel: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            reader.onload = e => { csvRaw = e.target.result; showFileName('csvName', file.name, file.size); };
+            reader.readAsText(file, 'UTF-8');
+        }
     }
 }
 function showFileName(id, name, size) {
@@ -733,6 +755,23 @@ function downloadTemplate() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = 'template_soal_kuisin.csv'; a.click();
     toast('success', 'Template CSV berhasil didownload!');
+}
+
+function downloadTemplateExcel() {
+    if (typeof XLSX === 'undefined') { toast('error', 'Library Excel belum siap, coba lagi.'); return; }
+    const data = [
+        ['question', 'A', 'B', 'C', 'D', 'answer'],
+        ['Apa kepanjangan dari PWM?', 'Pulse Width Modulation', 'Power Width Module', 'Phase Watt Module', 'Passive Wave Motor', 'A'],
+        ['Berapa tegangan GPIO ESP32?', '3.3V', '5V', '12V', '1.8V', 'A'],
+        ['Protokol I2C membutuhkan berapa kabel data?', '1', '2', '3', '4', 'B'],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    // Set lebar kolom agar rapi
+    ws['!cols'] = [{wch:40},{wch:25},{wch:25},{wch:25},{wch:25},{wch:8}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Soal');
+    XLSX.writeFile(wb, 'template_soal_kuisin.xlsx');
+    toast('success', 'Template Excel berhasil didownload!');
 }
 function downloadPdfTemplate() {
     const text = `1. Apa nama ibu kota Indonesia?

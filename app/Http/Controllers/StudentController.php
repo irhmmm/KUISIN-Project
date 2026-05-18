@@ -172,7 +172,44 @@ class StudentController extends Controller
     // --- 7. HALAMAN SELESAI ---
     public function showFinished()
     {
-        return view('student_finished');
+        $sessionId   = session('session_id');
+        $studentName = session('student_name', 'Siswa');
+        $score       = 0;
+        $correct     = 0;
+        $total       = 0;
+        $answers     = collect();
+        $questions   = collect();
+
+        if ($sessionId) {
+            $sessionData = DB::table('student_sessions')->where('id', $sessionId)->first();
+            $roomId      = session('room_id');
+            $room        = DB::table('rooms')->where('id', $roomId)->first();
+
+            if ($room) {
+                $questions = DB::table('questions')
+                              ->where('quiz_id', $room->quiz_id)
+                              ->orderBy('id')
+                              ->get();
+
+                $answers = DB::table('student_answers')
+                             ->where('session_id', $sessionId)
+                             ->get();
+
+                $total   = $questions->count();
+                $correct = $answers->where('is_correct', 1)->count();
+                $score   = $total > 0 ? round(($correct / $total) * 100) : 0;
+
+                // Lampirkan data jawaban per soal untuk review
+                foreach ($questions as $q) {
+                    $ans = $answers->where('question_id', $q->id)->first();
+                    $q->student_answer_id = $ans ? $ans->option_id : null;
+                    $q->is_correct        = $ans ? $ans->is_correct : null;
+                    $q->options           = DB::table('options')->where('question_id', $q->id)->get();
+                }
+            }
+        }
+
+        return view('student_finished', compact('score', 'correct', 'total', 'studentName', 'questions'));
     }
 
     // --- 8. RADAR PENGECEKAN STATUS ROOM ---
