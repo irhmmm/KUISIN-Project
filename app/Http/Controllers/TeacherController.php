@@ -346,6 +346,34 @@ class TeacherController extends Controller
         return redirect()->route('teacher.library')->with('success', 'Soal berhasil dihapus!');
     }
 
+    public function deleteQuiz($id)
+    {
+        if (!session('teacher_id')) return redirect()->route('teacher.login');
+
+        $teacherId = session('teacher_id');
+
+        // Pastikan kuis milik guru ini
+        $quiz = DB::table('quizzes')
+                  ->where('id', $id)
+                  ->where('teacher_id', $teacherId)
+                  ->first();
+
+        if (!$quiz) {
+            return redirect()->route('teacher.library')->with('error', 'Kategori tidak ditemukan.');
+        }
+
+        // Cascade delete: opsi → soal → kuis
+        $questionIds = DB::table('questions')->where('quiz_id', $id)->pluck('id');
+        if ($questionIds->isNotEmpty()) {
+            DB::table('options')->whereIn('question_id', $questionIds)->delete();
+        }
+        DB::table('questions')->where('quiz_id', $id)->delete();
+        DB::table('quizzes')->where('id', $id)->delete();
+
+        return redirect()->route('teacher.library')
+                         ->with('success', 'Kategori "' . $quiz->title . '" dan semua soalnya berhasil dihapus!');
+    }
+
     // =============================================
     // 5. QUIZ CONTROL (LUNCURKAN & AKHIRI)
     // =============================================

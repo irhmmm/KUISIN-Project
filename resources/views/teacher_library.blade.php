@@ -120,17 +120,33 @@
             
             <div class="p-4 space-y-2 flex-1">
                 @forelse($quizzes as $quiz)
-                <a href="{{ route('teacher.library', ['quiz_id' => $quiz->id]) }}" 
-                   class="block p-4 rounded-2xl border {{ $selectedQuizId == $quiz->id ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-white border-gray-100 hover:border-blue-100 hover:bg-gray-50' }} transition-all group">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $selectedQuizId == $quiz->id ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-gray-100 text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-500' }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <div class="relative group/item">
+                    <a href="{{ route('teacher.library', ['quiz_id' => $quiz->id]) }}" 
+                       class="block p-4 rounded-2xl border {{ $selectedQuizId == $quiz->id ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-white border-gray-100 hover:border-blue-100 hover:bg-gray-50' }} transition-all group pr-12">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors {{ $selectedQuizId == $quiz->id ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-gray-100 text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-500' }}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-sm truncate {{ $selectedQuizId == $quiz->id ? 'text-blue-900' : 'text-gray-700' }}">{{ $quiz->title }}</h4>
+                            </div>
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <h4 class="font-bold text-sm truncate {{ $selectedQuizId == $quiz->id ? 'text-blue-900' : 'text-gray-700' }}">{{ $quiz->title }}</h4>
-                        </div>
-                    </div>
-                </a>
+                    </a>
+                    {{-- Tombol Hapus Kategori (muncul saat hover) --}}
+                    <form action="{{ route('teacher.deleteQuiz', $quiz->id) }}" method="POST"
+                          class="absolute top-1/2 right-3 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                          onsubmit="return confirm('Hapus kategori \"{{ addslashes($quiz->title) }}\"?\n\nSemua soal di dalamnya juga akan ikut terhapus!')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                                title="Hapus kategori ini"
+                                class="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 hover:border-red-300 shadow-sm transition-all active:scale-90">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
                 @empty
                 <div class="text-center py-10 px-4">
                     <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">

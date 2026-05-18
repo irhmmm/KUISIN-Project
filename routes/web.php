@@ -72,6 +72,7 @@ Route::middleware(['role:teacher'])->group(function () {
     Route::get('/teacher-library/edit/{id}',     [TeacherController::class, 'editQuestion'])->name('teacher.editQuestion');
     Route::post('/teacher-library/update/{id}',  [TeacherController::class, 'updateQuestion'])->name('teacher.updateQuestion');
     Route::delete('/teacher-library/delete/{id}',[TeacherController::class, 'deleteQuestion'])->name('teacher.deleteQuestion');
+    Route::delete('/teacher-library/quiz/{id}',  [TeacherController::class, 'deleteQuiz'])->name('teacher.deleteQuiz');
 
     // Exit Ticket
     Route::post('/launch-exit-ticket', [TeacherController::class, 'launchExitTicket'])->name('teacher.launchExitTicket');
