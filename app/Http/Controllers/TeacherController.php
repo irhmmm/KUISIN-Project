@@ -603,7 +603,8 @@ class TeacherController extends Controller
     }
 
     // =============================================
-    // 6. EXPORT CSV
+    // =============================================
+    // 6. EXPORT EXCEL (dengan Indikasi Curang)
     // =============================================
 
     public function exportResults()
@@ -618,25 +619,28 @@ class TeacherController extends Controller
         $questions = DB::table('questions')->where('quiz_id', $quizId)->get();
         $sessions  = DB::table('student_sessions')->where('room_id', $roomId)->get();
 
-        $csvData   = [];
-        $header    = ['Nama Mahasiswa', 'Skor (%)'];
-        foreach ($questions as $i => $q) {
-            $header[] = 'Soal ' . ($i + 1);
-        }
-        $csvData[] = $header;
-
+        // Build rows data
+        $rows = [];
         foreach ($sessions as $session) {
-            $answers       = DB::table('student_answers')->where('session_id', $session->id)->get();
-            $correctCount  = $answers->where('is_correct', 1)->count();
-            $totalQ        = $questions->count();
-            $score         = $totalQ > 0 ? round(($correctCount / $totalQ) * 100) : 0;
+            $answers      = DB::table('student_answers')->where('session_id', $session->id)->get();
+            $correctCount = $answers->where('is_correct', 1)->count();
+            $totalQ       = $questions->count();
+            $score        = $totalQ > 0 ? round(($correctCount / $totalQ) * 100) : 0;
+            $cheat        = (int) ($session->cheat_attempts ?? 0);
 
-            $row = [$session->student_name, $score];
+            $row = [
+                'name'    => $session->student_name,
+                'score'   => $score,
+                'cheat'   => $cheat,
+                'answers' => [],
+            ];
+
             foreach ($questions as $q) {
-                $ans   = $answers->where('question_id', $q->id)->first();
-                $row[] = $ans ? ($ans->is_correct ? 'Benar' : 'Salah') : 'Kosong';
+                $ans          = $answers->where('question_id', $q->id)->first();
+                $row['answers'][] = $ans ? ($ans->is_correct ? 'Benar' : 'Salah') : 'Kosong';
             }
-            $csvData[] = $row;
+
+            $rows[] = $row;
         }
 
         $filename = 'Hasil_Kuis_' . $roomCode . '_' . date('d-m-Y_H-i') . '.xls';
@@ -648,19 +652,96 @@ class TeacherController extends Controller
             'Expires'             => '0',
         ];
 
-        $callback = function () use ($csvData) {
-            echo '<table border="1" cellpadding="5" cellspacing="0">';
-            foreach ($csvData as $index => $row) {
-                echo '<tr>';
-                foreach ($row as $cell) {
-                    if ($index === 0) {
-                        echo '<th style="background-color:#f2f2f2; font-weight:bold;">' . htmlspecialchars($cell) . '</th>';
-                    } else {
-                        echo '<td>' . htmlspecialchars($cell) . '</td>';
-                    }
+        $callback = function () use ($rows, $questions, $roomCode) {
+            // ── Styles ──────────────────────────────────────────────────────
+            $styleHeader  = 'background-color:#1e293b; color:#ffffff; font-weight:bold; font-size:12px; padding:8px 10px; text-align:center;';
+            $styleSubhdr  = 'background-color:#334155; color:#e2e8f0; font-weight:bold; font-size:11px; padding:6px 10px;';
+            $styleNormal  = 'font-size:11px; padding:6px 10px;';
+            $styleScore   = 'font-size:11px; padding:6px 10px; font-weight:bold; text-align:center;';
+            $styleBenar   = 'background-color:#d1fae5; color:#065f46; font-size:10px; padding:4px 8px; text-align:center;';
+            $styleSalah   = 'background-color:#fee2e2; color:#991b1b; font-size:10px; padding:4px 8px; text-align:center;';
+            $styleKosong  = 'background-color:#f3f4f6; color:#6b7280; font-size:10px; padding:4px 8px; text-align:center;';
+            $styleCheatOk = 'background-color:#d1fae5; color:#065f46; font-weight:bold; text-align:center; padding:6px 10px;';
+            $styleCheatWn = 'background-color:#fef3c7; color:#92400e; font-weight:bold; text-align:center; padding:6px 10px;';
+            $styleCheatDg = 'background-color:#fee2e2; color:#991b1b; font-weight:bold; text-align:center; padding:6px 10px;';
+            $styleRowCheat= 'background-color:#fff7ed;'; // Seluruh baris berwarna jika curang
+
+            $totalCols = 3 + count($questions); // Nama + Skor + Indikasi + per soal
+
+            echo '<table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; font-family:Arial,sans-serif;">';
+
+            // ── Judul ────────────────────────────────────────────────────
+            echo '<tr>';
+            echo '<th colspan="' . $totalCols . '" style="' . $styleHeader . ' font-size:14px; padding:12px;">';
+            echo 'Laporan Hasil Kuis - Kode Room: ' . htmlspecialchars($roomCode);
+            echo '</th></tr>';
+
+            echo '<tr>';
+            echo '<th colspan="' . $totalCols . '" style="background-color:#334155; color:#94a3b8; font-size:10px; padding:4px 10px;">';
+            echo 'Diekspor pada: ' . now()->format('d M Y, H:i') . ' WIB';
+            echo '</th></tr>';
+
+            // ── Baris kosong pemisah ─────────────────────────────────────
+            echo '<tr><td colspan="' . $totalCols . '" style="padding:4px;"></td></tr>';
+
+            // ── Header kolom ─────────────────────────────────────────────
+            echo '<tr>';
+            echo '<th style="' . $styleSubhdr . ' width:180px;">Nama Mahasiswa</th>';
+            echo '<th style="' . $styleSubhdr . ' width:70px;">Skor (%)</th>';
+            echo '<th style="' . $styleSubhdr . ' width:160px;">Indikasi Curang</th>';
+            foreach ($questions as $i => $q) {
+                echo '<th style="' . $styleSubhdr . ' width:60px;">Soal ' . ($i + 1) . '</th>';
+            }
+            echo '</tr>';
+
+            // ── Data per mahasiswa ────────────────────────────────────────
+            foreach ($rows as $row) {
+                $cheat     = $row['cheat'];
+                $isCheater = $cheat > 0;
+                $rowStyle  = $isCheater ? 'style="' . $styleRowCheat . '"' : '';
+
+                // Tentukan label & style indikasi curang
+                if ($cheat === 0) {
+                    $cheatLabel = 'Aman';
+                    $cheatStyle = $styleCheatOk;
+                } elseif ($cheat <= 2) {
+                    $cheatLabel = 'Mencurigakan (' . $cheat . 'x)';
+                    $cheatStyle = $styleCheatWn;
+                } else {
+                    $cheatLabel = 'TERINDIKASI CURANG (' . $cheat . 'x)';
+                    $cheatStyle = $styleCheatDg;
+                }
+
+                // Warna skor
+                $score = $row['score'];
+                $scoreColor = $score >= 80 ? '#065f46' : ($score >= 60 ? '#92400e' : '#991b1b');
+                $scoreBg    = $score >= 80 ? '#d1fae5' : ($score >= 60 ? '#fef3c7' : '#fee2e2');
+
+                echo '<tr ' . $rowStyle . '>';
+                echo '<td style="' . $styleNormal . '">' . htmlspecialchars($row['name']) . '</td>';
+                echo '<td style="' . $styleScore . ' background-color:' . $scoreBg . '; color:' . $scoreColor . ';">' . $score . '%</td>';
+                echo '<td style="' . $cheatStyle . '">' . $cheatLabel . '</td>';
+
+                foreach ($row['answers'] as $ans) {
+                    if ($ans === 'Benar')       echo '<td style="' . $styleBenar . '">' . $ans . '</td>';
+                    elseif ($ans === 'Salah')   echo '<td style="' . $styleSalah . '">' . $ans . '</td>';
+                    else                        echo '<td style="' . $styleKosong . '">' . $ans . '</td>';
                 }
                 echo '</tr>';
             }
+
+            // ── Keterangan legenda ────────────────────────────────────────
+            echo '<tr><td colspan="' . $totalCols . '" style="padding:6px;"></td></tr>';
+            echo '<tr>';
+            echo '<td colspan="' . $totalCols . '" style="background-color:#f8fafc; border-top:2px solid #e2e8f0; padding:8px 10px; font-size:10px; color:#475569;">';
+            echo '<b>Keterangan Indikasi Curang:</b> &nbsp;';
+            echo '<b>Aman</b> = Tidak terdeteksi &nbsp;|&nbsp; ';
+            echo '<b>Mencurigakan (1-2x)</b> = Terdeteksi pindah tab/window &nbsp;|&nbsp; ';
+            echo '<b>TERINDIKASI CURANG (3x+)</b> = Sangat mencurigakan &nbsp;&nbsp;';
+            echo '<i>(Deteksi terjadi saat mahasiswa keluar/pindah dari halaman ujian)</i>';
+            echo '</td>';
+            echo '</tr>';
+
             echo '</table>';
         };
 
