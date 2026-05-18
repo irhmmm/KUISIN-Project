@@ -734,7 +734,6 @@ function downloadTemplate() {
     a.download = 'template_soal_kuisin.csv'; a.click();
     toast('success', 'Template CSV berhasil didownload!');
 }
-
 function downloadPdfTemplate() {
     const text = `1. Apa nama ibu kota Indonesia?
 A. Jakarta
