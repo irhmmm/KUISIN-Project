@@ -14,10 +14,10 @@
         <div class="font-bold text-gray-500 uppercase tracking-wider text-sm flex items-center gap-3">
             {{ session('room_name') }}
             @if(isset($room->mode) && $room->mode === 'space_race' && $sessionData->team_name)
-                <span class="text-xs px-2 py-1 rounded text-white font-black" style="background-color: 
-                    {{ $sessionData->team_name == 'Merah' ? '#ef4444' : 
-                      ($sessionData->team_name == 'Biru' ? '#3b82f6' : 
-                      ($sessionData->team_name == 'Hijau' ? '#22c55e' : 
+                <span class="text-xs px-2 py-1 rounded text-white font-black" style="background-color:
+                    {{ $sessionData->team_name == 'Merah' ? '#ef4444' :
+                      ($sessionData->team_name == 'Biru' ? '#3b82f6' :
+                      ($sessionData->team_name == 'Hijau' ? '#22c55e' :
                       ($sessionData->team_name == 'Kuning' ? '#eab308' : '#a855f7'))) }}">
                     TIM {{ strtoupper($sessionData->team_name) }} 🚀
                 </span>
@@ -87,10 +87,12 @@
     // --- 1. TIMER PEMBULATAN ---
     let timeRemaining = Math.floor({{ $remainingSeconds }});
     const display = document.getElementById('countdownDisplay');
+    let isSubmitting = false;
 
     const timerInterval = setInterval(() => {
         if (timeRemaining <= 0) {
             clearInterval(timerInterval);
+            isSubmitting = true;
             alert("Waktu habis! Jawaban Anda akan dikirim otomatis.");
             window.onbeforeunload = null;
             document.getElementById('quizForm').submit();
@@ -156,6 +158,7 @@
         .then(response => response.json())
         .then(data => {
             if (data.is_active == 0) {
+                isSubmitting = true;
                 window.onbeforeunload = null;
                 document.getElementById('quizForm').submit();
             }
@@ -183,7 +186,8 @@
 
     // Deteksi jika siswa pindah tab
     document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "hidden") {
+        if (document.visibilityState === "hidden" && !isSubmitting) {
+            isSubmitting = true;
             fetch("{{ route('student.cheat') }}", {
                 method: "POST",
                 headers: {
@@ -200,22 +204,26 @@
 
     // Deteksi blur (buka window baru atau pindah window)
     window.addEventListener("blur", () => {
-        fetch("{{ route('student.cheat') }}", {
-            method: "POST",
-            headers: {
-                "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                "Content-Type": "application/json",
-                "X-Requested-With": "XMLHttpRequest"
-            }
-        });
-        alert("Peringatan! Anda terdeteksi keluar dari jendela ujian. Ujian Anda langsung diakhiri otomatis!");
-        window.onbeforeunload = null;
-        document.getElementById('quizForm').submit();
+        if (!isSubmitting) {
+            isSubmitting = true;
+            fetch("{{ route('student.cheat') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+            alert("Peringatan! Anda terdeteksi keluar dari jendela ujian. Ujian Anda langsung diakhiri otomatis!");
+            window.onbeforeunload = null;
+            document.getElementById('quizForm').submit();
+        }
     });
 
     // Izinkan submit tanpa peringatan
     document.getElementById('quizForm').addEventListener('submit', function() {
-        window.onbeforeunload = null;
+        isSubmitting = true;
+            window.onbeforeunload = null;
     });
     @endif
 </script>
