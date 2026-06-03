@@ -180,6 +180,7 @@
 
     // Mencegah reload atau keluar dari halaman
     window.addEventListener('beforeunload', function (e) {
+        if (isSubmitting) return;
         e.preventDefault();
         e.returnValue = 'Anda sedang mengerjakan kuis. Apakah Anda yakin ingin keluar?';
     });
